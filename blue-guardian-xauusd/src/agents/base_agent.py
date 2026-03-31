@@ -177,7 +177,10 @@ Remember: stay strictly in character. Output ONLY valid JSON."""
         system_prompt = self.build_system_prompt()
         user_prompt = self.build_user_prompt(market_snapshot, kg_context)
         
+        import time
         try:
+            logger.info(f"Agent {self.name} prompt:\nSYSTEM: {system_prompt}\nUSER: {user_prompt}")
+            start_time = time.time()
             if self.llm_type == "claude":
                 response = await self.client.messages.create(
                     model=self.model,
@@ -188,7 +191,8 @@ Remember: stay strictly in character. Output ONLY valid JSON."""
                 raw_output = response.content[0].text
             else:
                 raw_output = await self._ollama_complete(system_prompt, user_prompt)
-            
+            elapsed = time.time() - start_time
+            logger.info(f"Agent {self.name} LLM response time: {elapsed:.2f}s\nRaw output: {raw_output}")
             vote_data = self._parse_vote(raw_output)
             return AgentVote(
                 agent_id=self.agent_id,
@@ -201,7 +205,7 @@ Remember: stay strictly in character. Output ONLY valid JSON."""
             return self._fallback_vote()
     
     async def _ollama_complete(self, system_prompt: str, user_prompt: str) -> str:
-        """Call local Ollama model."""
+        """Call local Ollama model with robust error handling and logging."""
         import json as json_lib
         async with aiohttp.ClientSession() as session:
             payload = {
@@ -217,10 +221,18 @@ Remember: stay strictly in character. Output ONLY valid JSON."""
             async with session.post(
                 f"{self.ollama_url}/api/chat",
                 json=payload,
-                timeout=60
+                timeout=180  # Increased to 180 seconds
             ) as resp:
                 data = await resp.json()
-                return data["message"]["content"]
+                if "message" in data and "content" in data["message"]:
+                    return data["message"]["content"]
+                # Log the full response for debugging
+                from loguru import logger
+                logger.error(f"Ollama API unexpected response: {data}")
+                # Try fallback: check for 'content' at top level
+                if "content" in data:
+                    return data["content"]
+                raise RuntimeError(f"Ollama API response missing 'message' and 'content': {data}")
     
     def _parse_vote(self, raw_output: str) -> dict:
         """Parse LLM JSON output with fallback."""

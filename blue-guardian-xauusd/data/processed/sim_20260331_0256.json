@@ -1,0 +1,185 @@
+{
+  "timestamp": "2026-03-31T02:56:31.796507",
+  "market_snapshot": {
+    "timestamp": "2026-03-31T09:53:30.221424",
+    "xauusd_price": 4584.5,
+    "xauusd_change_1h": -0.31528593172428787,
+    "xauusd_change_24h": 0.38538391540435485,
+    "xauusd_atr_14": 31.785679408482142,
+    "xauusd_volume_relative": 1.0,
+    "xauusd_above_200ma": true,
+    "xauusd_above_50ma": true,
+    "xauusd_rsi_14": 62.97,
+    "xauusd_session": "London",
+    "dxy_price": 104.0,
+    "dxy_change_1d": 0.0,
+    "dxy_trend": "ranging",
+    "us_10y_yield": 4.13,
+    "us_2y_yield": 3.47,
+    "yield_curve_spread": 0.6599999999999997,
+    "real_yield_10y": 1.8199999999999998,
+    "vix": 18.0,
+    "vix_trend": "stable",
+    "spx_change_1d": 0.0,
+    "fed_funds_rate": 3.64,
+    "breakeven_inflation_10y": 2.31,
+    "high_impact_events_today": 0,
+    "next_event_in_minutes": null,
+    "last_cpi_surprise": null,
+    "last_nfp_surprise": null,
+    "risk_environment": "mixed",
+    "dollar_gold_divergence": false,
+    "real_yield_direction": "falling"
+  },
+  "votes": [
+    {
+      "agent_id": "AG001",
+      "agent_name": "Margaret Chen \u2014 Global Macro PM",
+      "agent_type": "macro_hedge_fund",
+      "direction": "LONG",
+      "conviction": 0.8,
+      "entry_rationale": "Real 10Y yield falling below 2.0% \u2192 accumulate LONG gold aggressively.",
+      "primary_driver": "Real Yield Trend",
+      "suggested_entry_zone": "$4,500\u2013$4,600",
+      "suggested_stop_loss": "below $4,450",
+      "suggested_target": "$5,000",
+      "would_trade_today": true,
+      "blocking_factors": [
+        "DXY trending up",
+        "VIX slightly elevated"
+      ],
+      "tail_risk_concern": "Potential hawkish Fed surprise within 48 hours",
+      "similar_past_event": "2020 COVID-19 crisis (gold flash crash)",
+      "full_reasoning": "Given the falling real yield trend, I am confident in a LONG gold position. The current price is slightly below my suggested entry zone, and I would scale in aggressively as the real yield continues to fall. However, I remain cautious due to the DXY trending up and VIX being slightly elevated."
+    },
+    {
+      "agent_id": "AG004",
+      "agent_name": "PBoC Gold Reserve Desk \u2014 China",
+      "agent_type": "central_bank_buyer",
+      "direction": "LONG",
+      "conviction": 0.5,
+      "entry_rationale": "Price has pulled back by 0.32% from recent high, creating a buying opportunity.",
+      "primary_driver": "1H Change",
+      "suggested_entry_zone": "$4,500\u2013$4,550",
+      "suggested_stop_loss": "below $4,400",
+      "suggested_target": "$4,700",
+      "would_trade_today": true,
+      "blocking_factors": [
+        "price still above key technical levels"
+      ],
+      "tail_risk_concern": "None",
+      "similar_past_event": "2020 COVID: bought $6B in gold during March dip \u2014 best trade in reserve history",
+      "full_reasoning": "Given the current market state, I see a buying opportunity. The price has pulled back by 0.32% from recent high, which is a good level to accumulate. I will buy with low conviction (0.5) and scale in over days/weeks."
+    },
+    {
+      "agent_id": "AG005",
+      "agent_name": "Citadel Securities \u2014 Gold Spot Market Maker",
+      "agent_type": "market_maker_hft",
+      "direction": "NEUTRAL",
+      "conviction": 0.5,
+      "entry_rationale": "Unreliable OFI due to mixed risk sentiment and lack of high-impact events today.",
+      "primary_driver": "Neutral market conditions with no clear trend or imbalance in order flow.",
+      "suggested_entry_zone": "$4,500\u2013$4,600",
+      "suggested_stop_loss": "below $4,480",
+      "suggested_target": "$4,620",
+      "would_trade_today": false,
+      "blocking_factors": [
+        "Mixed risk sentiment",
+        "No clear trend or imbalance in order flow"
+      ],
+      "tail_risk_concern": "Widening spreads on Fed/data days is a concern, but not applicable today.",
+      "similar_past_event": "Fed days with reduced exposure",
+      "full_reasoning": "Given the neutral market conditions and lack of high-impact events, I would prefer to stay flat and monitor order flow imbalance closely. The current price is within my suggested entry zone, but I'm cautious about entering a trade without a clear trend or imbalance in OFI."
+    },
+    {
+      "agent_id": "AG006",
+      "agent_name": "HSBC Physical Gold Desk \u2014 London",
+      "agent_type": "physical_dealer",
+      "direction": "NO_TRADE",
+      "conviction": 0.0,
+      "entry_rationale": "System error \u2014 agent unavailable",
+      "primary_driver": "SYSTEM_ERROR",
+      "suggested_entry_zone": "N/A",
+      "suggested_stop_loss": "N/A",
+      "suggested_target": "N/A",
+      "would_trade_today": false,
+      "blocking_factors": [
+        "Agent computation failed"
+      ],
+      "tail_risk_concern": "Unknown",
+      "similar_past_event": null,
+      "full_reasoning": "Agent failed to deliberate"
+    },
+    {
+      "agent_id": "AG007",
+      "agent_name": "Axel M\u00fcller \u2014 European Family Office, Geopolitical Risk Focus",
+      "agent_type": "family_office_geopolitical",
+      "direction": "LONG",
+      "conviction": 0.8,
+      "entry_rationale": "Geopolitical risk increasing due to rising tensions between US and China over Taiwan.",
+      "primary_driver": "US-China tensions over Taiwan",
+      "suggested_entry_zone": "$4,550\u2013$4,600",
+      "suggested_stop_loss": "below $4,400",
+      "suggested_target": "$5,000",
+      "would_trade_today": true,
+      "blocking_factors": [
+        "Neutral-looking technicals",
+        "Mixed risk sentiment"
+      ],
+      "tail_risk_concern": "US-China tensions could escalate into a full-blown conflict.",
+      "similar_past_event": "2019: US-Iran tensions led to a significant gold price increase.",
+      "full_reasoning": "Given the current geopolitical landscape, I believe it's essential to increase our gold allocation. The rising tensions between the US and China over Taiwan are a major concern for me. This situation has the potential to escalate into a full-blown conflict, which would significantly impact global markets. As a result, I'm looking to buy gold in the range of $4,550\u2013$4,600, with a stop loss below $4,400 and a target of $5,000."
+    },
+    {
+      "agent_id": "AG008",
+      "agent_name": "Priya Sharma \u2014 Prop Desk Technical Trader",
+      "agent_type": "technical_momentum",
+      "direction": "NO_TRADE",
+      "conviction": 0.5,
+      "entry_rationale": "No clear Break of Structure (BOS) or Retest at Order Block setup on any timeframe.",
+      "primary_driver": "Market structure and institutional order flow patterns not aligned with my technical analysis framework.",
+      "suggested_entry_zone": "$N/A",
+      "suggested_stop_loss": "N/A",
+      "suggested_target": "$N/A",
+      "would_trade_today": false,
+      "blocking_factors": [
+        "No clear BOS/Retest setup",
+        "Market structure not aligned"
+      ],
+      "tail_risk_concern": "Potential for stop hunt or news-driven price action.",
+      "similar_past_event": "2023: multiple false BOS setups in choppy market cost 2 months of gains",
+      "full_reasoning": "Given the current market state, I do not see a clear and reliable Break of Structure (BOS) + Retest at Order Block setup on any timeframe. The price action is ranging, with no clear trend direction. My technical analysis framework relies heavily on institutional order flow patterns, which are not evident in this scenario. As such, I will refrain from trading today."
+    }
+  ],
+  "consensus": {
+    "final_signal": "NO_TRADE",
+    "dominant_direction": "NEUTRAL",
+    "long_pct": 0.0,
+    "short_pct": 0.0,
+    "neutral_pct": 1.0,
+    "long_votes": 0,
+    "short_votes": 0,
+    "neutral_votes": 6,
+    "total_active": 6,
+    "weighted_conviction": 0.0,
+    "risk_adjusted_conviction": 0.0,
+    "quality_score": 0.0,
+    "threshold_met": false,
+    "conviction_met": false,
+    "reason": "Insufficient active agents (3)",
+    "contrarian_signal": {
+      "fade_direction": null,
+      "magnitude": 0.0
+    },
+    "top_long_rationale": [],
+    "top_short_rationale": [],
+    "blocking_reasons": [
+      "Insufficient active agents (3)"
+    ],
+    "suggested_entry_zone": "N/A",
+    "consensus_stop": "N/A",
+    "consensus_target": "N/A"
+  },
+  "total_agents": 6,
+  "elapsed_seconds": 180.0
+}

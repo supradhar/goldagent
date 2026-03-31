@@ -91,7 +91,7 @@ class SimulationRunner:
                 try:
                     vote = await asyncio.wait_for(
                         agent.deliberate(snapshot, kg_context),
-                        timeout=45  # 45 second timeout per agent
+                        timeout=180  # Increased to 180 seconds per agent
                     )
                     if verbose:
                         emoji = "🟢" if vote.direction == "LONG" else \
