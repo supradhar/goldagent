@@ -3,9 +3,12 @@ from loguru import logger
 
 def validate():
     print("=== Blue Guardian System Validation ===")
-    required = ["NEO4J_URI", "LLM_BACKEND"]
-    for v in required:
-        print(f"✅ {v} present" if os.getenv(v) else f"⚠️  Missing {v}")
+    required_env = ["NEO4J_URI", "LLM_BACKEND"]
+    for var in required_env:
+        if not os.getenv(var):
+            print(f"⚠️  Missing env var: {var}")
+        else:
+            print(f"✅ {var} present")
     logger.info("System validation complete")
 
 if __name__ == "__main__":
