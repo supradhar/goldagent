@@ -1,0 +1,5 @@
+# Simulation configuration
+timeframe: '1h'
+start_date: '2020-01-01'
+end_date: '2023-01-01'
+assets: ['XAUUSD']

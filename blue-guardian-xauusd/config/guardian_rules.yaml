@@ -1,0 +1,4 @@
+# Guardian rules configuration
+rules:
+  - name: "No trading during high-impact news"
+    enabled: true

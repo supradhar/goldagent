@@ -1,0 +1,5 @@
+# Agent configuration (optional)
+agents:
+  - name: "MomentumAgent"
+    persona: "momentum"
+    enabled: true

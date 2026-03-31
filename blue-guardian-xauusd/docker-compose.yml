@@ -1,0 +1,21 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    env_file:
+      - .env
+    volumes:
+      - ./src:/app/src
+      - ./data:/app/data
+      - ./logs:/app/logs
+    depends_on:
+      - neo4j
+  neo4j:
+    image: neo4j:5.12
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      - NEO4J_AUTH=neo4j/test
+    volumes:
+      - ./data/neo4j:/data
