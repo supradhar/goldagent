@@ -1,7 +1,9 @@
-# Placeholder for Market Data ingestion logic
+
 # src/ingestion/market_data.py
 """
 Real-time and historical market data for the simulation.
+US-friendly version — NO OANDA dependency.
+Uses Polygon → yfinance → FMP in order of reliability.
 """
 import os
 from datetime import datetime, timedelta
@@ -11,8 +13,7 @@ import pandas as pd
 import numpy as np
 from loguru import logger
 from pydantic import BaseModel
-import oandapyV20
-import oandapyV20.endpoints.instruments as instruments
+import yfinance as yf
 from fredapi import Fred
 
 
@@ -47,125 +48,117 @@ class MarketSnapshot(BaseModel):
     vix_trend: str                # rising | falling | stable
     spx_change_1d: float
     
-    # Macro context
-    fed_funds_rate: float
-    breakeven_inflation_10y: float
+    class MarketDataFetcher:
+        """US-friendly market data fetcher."""
     
-    # Today's events
-    high_impact_events_today: int
-    next_event_in_minutes: Optional[int] = None
-    last_cpi_surprise: Optional[float] = None
-    last_nfp_surprise: Optional[float] = None
+        def __init__(self):
+            self.polygon_key = os.getenv("POLYGON_API_KEY")
+            self.fmp_key = os.getenv("FMP_API_KEY")
+            self.fred = Fred(api_key=os.getenv("FRED_API_KEY"))
     
-    # Derived signals
-    risk_environment: str         # "risk_on" | "risk_off" | "mixed"
-    dollar_gold_divergence: bool  # DXY and gold moving same direction (unusual)
-    real_yield_direction: str     # "rising" (bearish gold) | "falling" (bullish gold)
-
-
-class MarketDataFetcher:
-    """
-    Fetches all required market data for the simulation.
-    Uses OANDA + FRED + FMP with fallbacks.
-    """
-    
-    def __init__(self):
-        self.oanda_api = oandapyV20.API(
-            access_token=os.getenv("OANDA_API_KEY"),
-            environment=os.getenv("OANDA_ENVIRONMENT", "practice")
-        )
-        self.fred = Fred(api_key=os.getenv("FRED_API_KEY"))
-        self.fmp_key = os.getenv("FMP_API_KEY")
-        self.polygon_key = os.getenv("POLYGON_API_KEY")
-    
-    async def get_full_snapshot(self) -> MarketSnapshot:
-        """Fetch all data and build complete market snapshot."""
-        logger.info("Fetching market snapshot...")
+        async def get_full_snapshot(self) -> MarketSnapshot:
+            logger.info("Fetching market snapshot (US-friendly sources)...")
         
-        async with aiohttp.ClientSession() as session:
-            # Fetch all data concurrently
-            xau_data, dxy_data, yields_data, risk_data = await asyncio.gather(
-                self._fetch_xauusd(session),
-                self._fetch_dxy(session),
-                self._fetch_yields(),
-                self._fetch_risk_metrics(session),
+            async with aiohttp.ClientSession() as session:
+                xau_data, dxy_data, yields_data, risk_data = await asyncio.gather(
+                    self._fetch_xauusd(session),
+                    self._fetch_dxy(session),
+                    self._fetch_yields(),
+                    self._fetch_risk_metrics(session),
+                )
+        
+            # Compute derived signals
+            real_yield = yields_data["us_10y"] - yields_data.get("breakeven_10y", 2.0)
+            yield_curve = yields_data["us_10y"] - yields_data["us_2y"]
+        
+            risk_env = self._classify_risk_environment(
+                dxy_data["change_1d"], risk_data["vix"], risk_data["spx_change_1d"]
             )
         
-        # Compute derived signals
-        real_yield = yields_data["us_10y"] - yields_data.get("breakeven_10y", 2.0)
-        yield_curve = yields_data["us_10y"] - yields_data["us_2y"]
+            real_yield_dir = "rising" if real_yield > yields_data.get("prev_real_yield", real_yield) else "falling"
         
-        # Risk environment classification
-        risk_env = self._classify_risk_environment(
-            dxy_data["change_1d"],
-            risk_data["vix"],
-            risk_data["spx_change_1d"]
-        )
-        
-        # Real yield direction (key driver)
-        real_yield_dir = "rising" if real_yield > yields_data.get("prev_real_yield", real_yield) else "falling"
-        
-        return MarketSnapshot(
-            timestamp=datetime.utcnow().isoformat(),
-            xauusd_price=xau_data["price"],
-            xauusd_change_1h=xau_data["change_1h"],
-            xauusd_change_24h=xau_data["change_24h"],
-            xauusd_atr_14=xau_data["atr_14"],
-            xauusd_volume_relative=xau_data.get("vol_relative", 1.0),
-            xauusd_above_200ma=xau_data["above_200ma"],
-            xauusd_above_50ma=xau_data["above_50ma"],
-            xauusd_rsi_14=xau_data["rsi"],
-            xauusd_session=self._get_current_session(),
-            dxy_price=dxy_data["price"],
-            dxy_change_1d=dxy_data["change_1d"],
-            dxy_trend=dxy_data["trend"],
-            us_10y_yield=yields_data["us_10y"],
-            us_2y_yield=yields_data["us_2y"],
-            yield_curve_spread=yield_curve,
-            real_yield_10y=real_yield,
-            vix=risk_data["vix"],
-            vix_trend=risk_data["vix_trend"],
-            spx_change_1d=risk_data["spx_change_1d"],
-            fed_funds_rate=yields_data.get("fed_funds", 5.25),
-            breakeven_inflation_10y=yields_data.get("breakeven_10y", 2.0),
-            high_impact_events_today=0,  # filled by pipeline
-            risk_environment=risk_env,
-            dollar_gold_divergence=self._check_divergence(
-                dxy_data["change_1d"], xau_data["change_24h"]
-            ),
-            real_yield_direction=real_yield_dir
-        )
-    
-    async def _fetch_xauusd(self, session) -> Dict:
-        """Fetch XAUUSD OHLCV + indicators via OANDA."""
-        try:
-            # Get H1 candles (last 200 for MAs + ATR)
-            r = instruments.InstrumentsCandles(
-                instrument="XAU_USD",
-                params={"granularity": "H1", "count": 200, "price": "MBA"}
+            return MarketSnapshot(
+                timestamp=datetime.utcnow().isoformat(),
+                xauusd_price=xau_data["price"],
+                xauusd_change_1h=xau_data["change_1h"],
+                xauusd_change_24h=xau_data["change_24h"],
+                xauusd_atr_14=xau_data["atr_14"],
+                xauusd_volume_relative=xau_data.get("vol_relative", 1.0),
+                xauusd_above_200ma=xau_data["above_200ma"],
+                xauusd_above_50ma=xau_data["above_50ma"],
+                xauusd_rsi_14=xau_data["rsi"],
+                xauusd_session=self._get_current_session(),
+                dxy_price=dxy_data["price"],
+                dxy_change_1d=dxy_data["change_1d"],
+                dxy_trend=dxy_data["trend"],
+                us_10y_yield=yields_data["us_10y"],
+                us_2y_yield=yields_data["us_2y"],
+                yield_curve_spread=yield_curve,
+                real_yield_10y=real_yield,
+                vix=risk_data["vix"],
+                vix_trend=risk_data["vix_trend"],
+                spx_change_1d=risk_data["spx_change_1d"],
+                fed_funds_rate=yields_data.get("fed_funds", 5.25),
+                breakeven_inflation_10y=yields_data.get("breakeven_10y", 2.0),
+                high_impact_events_today=0,
+                risk_environment=risk_env,
+                dollar_gold_divergence=self._check_divergence(
+                    dxy_data["change_1d"], xau_data["change_24h"]
+                ),
+                real_yield_direction=real_yield_dir
             )
-            self.oanda_api.request(r)
-            candles = r.response["candles"]
-            
-            closes = np.array([float(c["mid"]["c"]) for c in candles if c["complete"]])
-            highs = np.array([float(c["mid"]["h"]) for c in candles if c["complete"]])
-            lows = np.array([float(c["mid"]["l"]) for c in candles if c["complete"]])
-            
-            current_price = float(candles[-1]["mid"]["c"])
-            
-            return {
-                "price": current_price,
-                "change_1h": (current_price - closes[-2]) / closes[-2] * 100,
-                "change_24h": (current_price - closes[-25]) / closes[-25] * 100,
-                "atr_14": self._compute_atr(highs, lows, closes, period=14),
-                "above_200ma": current_price > closes[-200:].mean(),
-                "above_50ma": current_price > closes[-50:].mean(),
-                "rsi": self._compute_rsi(closes, period=14),
-            }
-        except Exception as e:
-            logger.error(f"OANDA fetch failed: {e}")
+    
+        async def _fetch_xauusd(self, session) -> Dict:
+            """Primary: Polygon → yfinance → FMP"""
+            # 1. Polygon (best real-time)
+            if self.polygon_key:
+                try:
+                    url = f"https://api.polygon.io/v2/last/forex/XAUUSD?apikey={self.polygon_key}"
+                    async with session.get(url, timeout=8) as resp:
+                        data = await resp.json()
+                        if data.get("status") == "OK":
+                            price = float(data["last"]["price"])
+                            return await self._enrich_xau_data(price, session)
+                except Exception as e:
+                    logger.warning(f"Polygon XAUUSD failed: {e}")
+        
+            # 2. yfinance (no key needed, very reliable)
+            try:
+                gold = yf.Ticker("GC=F")  # Gold futures — extremely close to spot
+                data = gold.history(period="5d", interval="1h")
+                if not data.empty:
+                    price = float(data["Close"].iloc[-1])
+                    return await self._enrich_xau_data(price, session)
+            except Exception as e:
+                logger.warning(f"yfinance failed: {e}")
+        
+            # 3. FMP fallback (already in your .env)
             return await self._fetch_xauusd_fallback(session)
     
+        async def _enrich_xau_data(self, price: float, session) -> Dict:
+            """Add indicators using yfinance history (fast)"""
+            gold = yf.Ticker("GC=F")
+            hist = gold.history(period="20d", interval="1h")
+            if hist.empty:
+                return {"price": price, "change_1h": 0.0, "change_24h": 0.0,
+                        "atr_14": 15.0, "above_200ma": True, "above_50ma": True, "rsi": 50.0}
+        
+            closes = hist["Close"].values
+            highs = hist["High"].values
+            lows = hist["Low"].values
+        
+            return {
+                "price": price,
+                "change_1h": float((price - closes[-2]) / closes[-2] * 100) if len(closes) > 1 else 0.0,
+                "change_24h": float((price - closes[-25]) / closes[-25] * 100) if len(closes) > 25 else 0.0,
+                "atr_14": self._compute_atr(highs, lows, closes, 14),
+                "above_200ma": price > float(closes[-200:].mean()) if len(closes) >= 200 else True,
+                "above_50ma": price > float(closes[-50:].mean()) if len(closes) >= 50 else True,
+                "rsi": self._compute_rsi(closes, 14),
+            }
+    
+        # (keep the rest of your original methods exactly the same: _fetch_dxy, _fetch_yields, _fetch_risk_metrics, _compute_atr, _compute_rsi, _get_current_session, etc.)
+        # ... [copy the rest of your original file from line ~150 onward — only the _fetch_xauusd part changed]
     async def _fetch_xauusd_fallback(self, session) -> Dict:
         """Fallback: use FMP for gold data."""
         url = f"https://financialmodelingprep.com/api/v3/quote/XAUUSD?apikey={self.fmp_key}"

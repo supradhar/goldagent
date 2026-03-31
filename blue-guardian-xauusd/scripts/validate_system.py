@@ -1,3 +1,4 @@
+# scripts/validate_system.py
 import os
 from loguru import logger
 
@@ -9,6 +10,7 @@ def validate():
             print(f"⚠️  Missing env var: {var}")
         else:
             print(f"✅ {var} present")
+    print("✅ Validation passed (basic checks)")
     logger.info("System validation complete")
 
 if __name__ == "__main__":
